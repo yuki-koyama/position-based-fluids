@@ -1,0 +1,3 @@
+[submodule "external/alembic"]
+	path = external/alembic
+	url = https://github.com/alembic/alembic.git
