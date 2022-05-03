@@ -8,13 +8,13 @@ using Vec3   = Eigen::Matrix<Scalar, 3, 1>;
 
 struct Particle
 {
-    uint32_t i;
-    Scalar   m;
-    Vec3     x;
-    Vec3     v;
+    int    i;
+    Scalar m;
+    Vec3   x;
+    Vec3   v;
 
-    Vec3                  p;
-    std::vector<uint32_t> neighbors;
+    Vec3             p;
+    std::vector<int> neighbors;
 };
 
 int main()
