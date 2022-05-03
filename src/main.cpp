@@ -6,10 +6,13 @@ using Vec3 = Eigen::Vector3d;
 
 struct Particle
 {
-    double m;
-    Vec3   x;
-    Vec3   p;
-    Vec3   v;
+    uint32_t i;
+    double   m;
+    Vec3     x;
+    Vec3     v;
+
+    Vec3                  p;
+    std::vector<uint32_t> neighbors;
 };
 
 int main()
