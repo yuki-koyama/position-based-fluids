@@ -1,4 +1,5 @@
 #include <Eigen/Core>
+#include <cstdint>
 #include <iostream>
 #include <vector>
 
