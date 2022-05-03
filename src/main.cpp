@@ -3,12 +3,13 @@
 #include <iostream>
 #include <vector>
 
-using Vec3 = Eigen::Vector3d;
+using Scalar = double;
+using Vec3   = Eigen::Matrix<Scalar, 3, 1>;
 
 struct Particle
 {
     uint32_t i;
-    double   m;
+    Scalar   m;
     Vec3     x;
     Vec3     v;
 
