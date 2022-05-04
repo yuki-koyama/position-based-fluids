@@ -87,8 +87,26 @@ Vec3 calcGradConstraint(const int                            target_index,
                         const Scalar                         rest_density,
                         const Scalar                         radius)
 {
-    // TODO: Calculate gradient
-    return Vec3::Zero();
+    const auto& p_target = particles[target_index];
+
+    if (target_index == var_index)
+    {
+        Vec3 sum = Vec3::Zero();
+        for (int neighbor_index : neighbor_list[target_index])
+        {
+            const auto& p = particles[neighbor_index];
+
+            sum += p.m * calcGradKernel(p_target.p - p.p, radius);
+        }
+
+        return sum / rest_density;
+    }
+    else
+    {
+        const auto& p = particles[var_index];
+
+        return -p.m * calcGradKernel(p_target.p - p.p, radius) / rest_density;
+    }
 }
 
 void step(const Scalar dt, std::vector<Particle>& particles)
