@@ -5,13 +5,20 @@
 #include <iostream>
 #include <vector>
 
-void step(std::vector<Particle>& particles)
+void step(const Scalar dt, std::vector<Particle>& particles)
 {
     const int num_particles = particles.size();
 
     for (int i = 0; i < num_particles; ++i)
     {
-        particles[i].x = Vec3::Random() + Vec3(0.0, 0.5, 0.0);
+        particles[i].v = particles[i].v + dt * Vec3(0.0, -9.8, 0.0);
+        particles[i].p = particles[i].x + dt * particles[i].v;
+    }
+
+    for (int i = 0; i < num_particles; ++i)
+    {
+        particles[i].v = (particles[i].p - particles[i].x) / dt;
+        particles[i].x = particles[i].p;
     }
 }
 
@@ -44,7 +51,7 @@ int main()
     for (int t = 0; t < 120; ++t)
     {
         // Step the simulation time
-        step(particles);
+        step(dt, particles);
 
         // Write the current status
         alembic_manager.submitCurrentStatus();
