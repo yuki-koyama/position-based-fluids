@@ -83,7 +83,7 @@ Vec3 calcGradSpikyKernel(const Vec3 r, const Scalar h)
     const Scalar diff         = h - r_norm;
     const Scalar diff_squared = diff * diff;
 
-    return -r * (coeff / h_6th_power * r_norm) * diff_squared;
+    return -r * (coeff / (h_6th_power * r_norm)) * diff_squared;
 }
 
 #endif
