@@ -29,6 +29,18 @@ int main()
     ParticlesAlembicManager alembic_manager("./test.abc", dt, "fluid", &particles);
     alembic_manager.submitCurrentStatus();
 
+    // Simulate particles
+    for (int t = 0; t < 120; ++t)
+    {
+        for (int i = 0; i < num_particles; ++i)
+        {
+            particles[i].x = Vec3::Random();
+        }
+
+        // Write the current status
+        alembic_manager.submitCurrentStatus();
+    }
+
     // Print particle status
     for (auto& particle : particles)
     {
