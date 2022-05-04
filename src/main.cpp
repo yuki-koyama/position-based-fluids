@@ -205,6 +205,31 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     }
 }
 
+void test()
+{
+    constexpr auto   calcFunc     = calcPoly6Kernel;
+    constexpr auto   calcGradFunc = calcGradPoly6Kernel;
+    constexpr Scalar epsilon      = 1e-08;
+    constexpr Scalar radius       = 0.4;
+
+    const Vec3 x = radius * Vec3::Random();
+
+    const Scalar val = calcFunc(x, radius);
+
+    Vec3 numerical_grad;
+    for (int i = 0; i < 3; ++i)
+    {
+        Vec3 eps = Vec3::Zero();
+        eps[i]   = epsilon;
+
+        numerical_grad[i] = (calcFunc(x + eps, radius) - val) / epsilon;
+    }
+
+    const Vec3 grad = calcGradFunc(x, radius);
+
+    assert((grad - numerical_grad).norm() < 1e-04);
+}
+
 int main()
 {
     std::vector<Particle> particles;
