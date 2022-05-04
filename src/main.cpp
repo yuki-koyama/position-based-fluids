@@ -48,6 +48,23 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
     for (int k = 0; k < num_iters; ++k)
     {
+        // Calculate lambda
+        VecX lambda(num_particles);
+        for (int i = 0; i < num_particles; ++i)
+        {
+            auto& p = particles[i];
+
+            // TODO: Calculate lambda here
+        }
+
+        // Calculate delta p and apply it
+        for (int i = 0; i < num_particles; ++i)
+        {
+            auto& p = particles[i];
+
+            // TODO: Calculate delta p here
+        }
+
         for (int i = 0; i < num_particles; ++i)
         {
             auto& p = particles[i];

@@ -5,5 +5,6 @@
 
 using Scalar = double;
 using Vec3   = Eigen::Matrix<Scalar, 3, 1>;
+using VecX   = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
 
 #endif
