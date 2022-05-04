@@ -36,6 +36,17 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
         }
     }
 
+    constexpr bool print_stats = true;
+    if constexpr (print_stats)
+    {
+        VecX nums(num_particles);
+        for (int i = 0; i < num_particles; ++i)
+        {
+            nums[i] = neighbors_list[i].size();
+        }
+        std::cout << "Average(#neighbors): " << nums.mean() << std::endl;
+    }
+
     return neighbors_list;
 }
 
