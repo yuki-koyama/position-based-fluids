@@ -50,11 +50,10 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
     return neighbors_list;
 }
 
-Scalar calcConstraint(const int                            target_index,
-                      const std::vector<Particle>&         particles,
-                      const std::vector<std::vector<int>>& neighbor_list,
-                      const Scalar                         rest_density,
-                      const Scalar                         radius)
+Scalar calcDensity(const int                            target_index,
+                   const std::vector<Particle>&         particles,
+                   const std::vector<std::vector<int>>& neighbor_list,
+                   const Scalar                         radius)
 {
     const auto& p_target = particles[target_index];
 
@@ -65,6 +64,18 @@ Scalar calcConstraint(const int                            target_index,
 
         density += p.m * calcKernel(p_target.p - p.p, radius);
     }
+    density += p_target.m * calcKernel(Vec3::Zero(), radius);
+
+    return density;
+}
+
+Scalar calcConstraint(const int                            target_index,
+                      const std::vector<Particle>&         particles,
+                      const std::vector<std::vector<int>>& neighbor_list,
+                      const Scalar                         rest_density,
+                      const Scalar                         radius)
+{
+    const Scalar density = calcDensity(target_index, particles, neighbor_list, radius);
 
     return (density / rest_density) - 1.0;
 }
