@@ -111,10 +111,10 @@ Vec3 calcGradConstraint(const int                            target_index,
 
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int    num_iters    = 8;
+    constexpr int    num_iters    = 4;
     constexpr Scalar radius       = 0.2;
     constexpr Scalar rest_density = 1000.0;
-    constexpr Scalar epsilon      = 1e-04;
+    constexpr Scalar epsilon      = 5e+01;
 
     const int num_particles = particles.size();
 
@@ -210,7 +210,7 @@ void test()
     constexpr auto   calcFunc     = calcPoly6Kernel;
     constexpr auto   calcGradFunc = calcGradPoly6Kernel;
     constexpr Scalar epsilon      = 1e-08;
-    constexpr Scalar radius       = 0.4;
+    constexpr Scalar radius       = 0.2;
 
     const Vec3 x = radius * Vec3::Random();
 
@@ -234,11 +234,12 @@ int main()
 {
     std::vector<Particle> particles;
 
-    constexpr Scalar dt = 1.0 / 60.0;
+    constexpr Scalar dt         = 1.0 / 60.0;
+    constexpr int    num_frames = 60;
 
-    constexpr int x_size = 12;
-    constexpr int y_size = 12;
-    constexpr int z_size = 12;
+    constexpr int x_size = 20;
+    constexpr int y_size = 20;
+    constexpr int z_size = 20;
 
     // Generate and initialize particles
     constexpr int num_particles = x_size * y_size * z_size;
@@ -246,8 +247,8 @@ int main()
     for (int i = 0; i < num_particles; ++i)
     {
         particles[i].i = i;
-        particles[i].m = 1000.0 / static_cast<Scalar>(num_particles);
-        particles[i].x = 0.5 * Vec3::Random() + Vec3(0.0, 1.0, 0.0);
+        particles[i].m = 4000.0 / static_cast<Scalar>(num_particles);
+        particles[i].x = Vec3(0.5, 2.0, 0.5).cwiseProduct(Vec3::Random()) + Vec3(0.0, 2.0, 0.0);
         particles[i].v = Vec3::Zero();
     }
 
@@ -256,13 +257,13 @@ int main()
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
-    for (int t = 0; t < 60; ++t)
+    for (int t = 0; t < num_frames; ++t)
     {
-        constexpr int num_substeps = 2;
-        constexpr Scalar sub_dt = dt / static_cast<Scalar>(num_substeps);
+        constexpr int    num_substeps = 2;
+        constexpr Scalar sub_dt       = dt / static_cast<Scalar>(num_substeps);
 
         // Step the simulation time
-        for (int k = 0; k < num_substeps; ++ k)
+        for (int k = 0; k < num_substeps; ++k)
         {
             step(sub_dt, particles);
         }
