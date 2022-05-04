@@ -18,6 +18,12 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
     {
         for (int j = 0; j < num_particles; ++j)
         {
+            // Do not include the target particle itself as its neighborhoods
+            if (i == j)
+            {
+                continue;
+            }
+
             const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
 
             if (squared_dist < radius_squared)
@@ -35,6 +41,9 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     constexpr int    num_iters    = 10;
     constexpr Scalar radius       = 0.2;
     constexpr Scalar rest_density = 1.0;
+
+    const auto calcKernel     = calcPoly6Kernel;
+    const auto calcGradKernel = calcGradPoly6Kernel;
 
     const int num_particles = particles.size();
 
@@ -55,14 +64,42 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             auto& p = particles[i];
 
             // TODO: Calculate lambda here
+            lambda[i] = 0.0;
         }
 
-        // Calculate delta p and apply it
+        // Calculate delta p (note: Jacobi style)
+        MatX delta_p(3, num_particles);
         for (int i = 0; i < num_particles; ++i)
         {
             auto& p = particles[i];
 
-            // TODO: Calculate delta p here
+            const int num_neighbors = neighbors_list[i].size();
+
+            // If there is no neighborhoods, just ignore the pressure
+            if (num_neighbors == 0)
+            {
+                continue;
+            }
+
+            // Calculate the sum of pressure effect
+            MatX buffer(3, num_neighbors);
+            for (int j = 0; j < num_neighbors; ++j)
+            {
+                const int    neighbor_index = neighbors_list[i][j];
+                const Scalar coeff          = lambda[i] + lambda[neighbor_index];
+
+                buffer.col(j) = coeff * calcGradKernel(p.p - particles[neighbor_index].p, radius);
+            }
+            const Vec3 sum = buffer.rowwise().sum();
+
+            // Calculate delta p of this particle
+            delta_p.col(i) = (1.0 / rest_density) * sum;
+        }
+
+        // Apply delta p (note: Jacobi style)
+        for (int i = 0; i < num_particles; ++i)
+        {
+            particles[i].p += delta_p.col(i);
         }
 
         for (int i = 0; i < num_particles; ++i)
@@ -104,11 +141,11 @@ int main()
     }
 
     // Instantiate an alembic manager and submit the initial status
-    ParticlesAlembicManager alembic_manager("./test.abc", dt, "fluid", &particles);
+    ParticlesAlembicManager alembic_manager("./test.abc", dt, "Fluid", &particles);
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
-    for (int t = 0; t < 120; ++t)
+    for (int t = 0; t < 60; ++t)
     {
         // Step the simulation time
         step(dt, particles);
