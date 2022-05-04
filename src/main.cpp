@@ -9,7 +9,8 @@
 
 std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
 {
-    const int num_particles = particles.size();
+    const int    num_particles  = particles.size();
+    const Scalar radius_squared = radius * radius;
 
     std::vector<std::vector<int>> neighbors_list(num_particles);
 
@@ -19,7 +20,7 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
         {
             const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
 
-            if (squared_dist < radius * radius)
+            if (squared_dist < radius_squared)
             {
                 neighbors_list[i].push_back(j);
             }
