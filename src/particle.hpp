@@ -13,9 +13,7 @@ struct Particle
     Scalar m;
     Vec3   x;
     Vec3   v;
-
-    Vec3             p;
-    std::vector<int> neighbors;
+    Vec3   p;
 };
 
 #endif

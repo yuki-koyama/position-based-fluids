@@ -5,9 +5,33 @@
 #include <iostream>
 #include <vector>
 
+std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
+{
+    const int num_particles = particles.size();
+
+    std::vector<std::vector<int>> neighbors_list(num_particles);
+
+    for (int i = 0; i < num_particles; ++i)
+    {
+        for (int j = 0; j < num_particles; ++j)
+        {
+            const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
+
+            if (squared_dist < radius * radius)
+            {
+                neighbors_list[i].push_back(j);
+            }
+        }
+    }
+
+    return neighbors_list;
+}
+
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int num_iters = 10;
+    constexpr int    num_iters    = 10;
+    constexpr Scalar radius       = 0.2;
+    constexpr Scalar rest_density = 1.0;
 
     const int num_particles = particles.size();
 
@@ -16,6 +40,8 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         particles[i].v = particles[i].v + dt * Vec3(0.0, -9.8, 0.0);
         particles[i].p = particles[i].x + dt * particles[i].v;
     }
+
+    const auto neighbors_list = findNeighborParticles(radius, particles);
 
     for (int k = 0; k < num_iters; ++k)
     {
