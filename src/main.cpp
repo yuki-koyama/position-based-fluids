@@ -7,6 +7,9 @@
 #include <iostream>
 #include <vector>
 
+constexpr auto calcKernel     = calcPoly6Kernel;
+constexpr auto calcGradKernel = calcGradPoly6Kernel;
+
 std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
 {
     const int    num_particles  = particles.size();
@@ -39,10 +42,18 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
 Scalar calcConstraint(const int                            target_index,
                       const std::vector<Particle>&         particles,
                       const std::vector<std::vector<int>>& neighbor_list,
-                      const Scalar                         rest_density)
+                      const Scalar                         rest_density,
+                      const Scalar                         radius)
 {
-    // TODO: Calculate density
+    const auto& p_target = particles[target_index];
+
     Scalar density = 0.0;
+    for (int neighbor_index : neighbor_list[target_index])
+    {
+        const auto& p = particles[neighbor_index];
+
+        density += p.m * calcKernel(p_target.p - p.p, radius);
+    }
 
     return (density / rest_density) - 1.0;
 }
@@ -51,7 +62,8 @@ Vec3 calcGradConstraint(const int                            target_index,
                         const int                            var_index,
                         const std::vector<Particle>&         particles,
                         const std::vector<std::vector<int>>& neighbor_list,
-                        const Scalar                         rest_density)
+                        const Scalar                         rest_density,
+                        const Scalar                         radius)
 {
     // TODO: Calculate gradient
     return Vec3::Zero();
@@ -61,10 +73,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 {
     constexpr int    num_iters    = 10;
     constexpr Scalar radius       = 0.2;
-    constexpr Scalar rest_density = 1.0;
-
-    const auto calcKernel     = calcPoly6Kernel;
-    const auto calcGradKernel = calcGradPoly6Kernel;
+    constexpr Scalar rest_density = 1000.0;
 
     const int num_particles = particles.size();
 
@@ -129,7 +138,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             // Detect and handle environmental collisions (in a very naive way)
             p.p = p.p.cwiseMax(Vec3(-1.0, 0.0, -1.0));
-            p.p = p.p.cwiseMin(Vec3(+1.0, 2.0, +1.0));
+            p.p = p.p.cwiseMin(Vec3(+1.0, 4.0, +1.0));
         }
     }
 
