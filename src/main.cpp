@@ -36,6 +36,27 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
     return neighbors_list;
 }
 
+Scalar calcConstraint(const int                            target_index,
+                      const std::vector<Particle>&         particles,
+                      const std::vector<std::vector<int>>& neighbor_list,
+                      const Scalar                         rest_density)
+{
+    // TODO: Calculate density
+    Scalar density = 0.0;
+
+    return (density / rest_density) - 1.0;
+}
+
+Vec3 calcGradConstraint(const int                            target_index,
+                        const int                            var_index,
+                        const std::vector<Particle>&         particles,
+                        const std::vector<std::vector<int>>& neighbor_list,
+                        const Scalar                         rest_density)
+{
+    // TODO: Calculate gradient
+    return Vec3::Zero();
+}
+
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
     constexpr int    num_iters    = 10;
