@@ -134,8 +134,21 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         {
             auto& p = particles[i];
 
-            // TODO: Calculate lambda here
-            lambda[i] = 0.0;
+            const Scalar numerator = calcConstraint(i, particles, neighbors_list, rest_density, radius);
+
+            Scalar denominator = 0.0;
+            for (int neighbor_index : neighbors_list[i])
+            {
+                const Vec3 grad =
+                    calcGradConstraint(i, neighbor_index, particles, neighbors_list, rest_density, radius);
+
+                // Note: In Eq.12, the inverse mass is dropped for simplicity
+                denominator += (1.0 / particles[neighbor_index].m) * grad.squaredNorm();
+            }
+            // Note: Add an epsilon value for relaxation (see Eq.11)
+            denominator += epsilon;
+
+            lambda[i] = -numerator / denominator;
         }
 
         // Calculate delta p (note: Jacobi style)
@@ -152,12 +165,14 @@ void step(const Scalar dt, std::vector<Particle>& particles)
                 continue;
             }
 
-            // Calculate the sum of pressure effect
+            // Calculate the sum of pressure effect (Eq.12)
             MatX buffer(3, num_neighbors);
             for (int j = 0; j < num_neighbors; ++j)
             {
-                const int    neighbor_index = neighbors_list[i][j];
-                const Scalar coeff          = lambda[i] + lambda[neighbor_index];
+                const int neighbor_index = neighbors_list[i][j];
+
+                // TODO: Confirm this equation
+                const Scalar coeff = particles[neighbor_index].m * lambda[i] + p.m * lambda[neighbor_index];
 
                 buffer.col(j) = coeff * calcGradKernel(p.p - particles[neighbor_index].p, radius);
             }
