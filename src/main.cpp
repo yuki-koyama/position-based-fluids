@@ -111,9 +111,10 @@ Vec3 calcGradConstraint(const int                            target_index,
 
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int    num_iters    = 10;
+    constexpr int    num_iters    = 8;
     constexpr Scalar radius       = 0.2;
     constexpr Scalar rest_density = 1000.0;
+    constexpr Scalar epsilon      = 1e-04;
 
     const int num_particles = particles.size();
 
@@ -195,9 +196,9 @@ int main()
 
     constexpr Scalar dt = 1.0 / 60.0;
 
-    constexpr int x_size = 8;
-    constexpr int y_size = 8;
-    constexpr int z_size = 8;
+    constexpr int x_size = 12;
+    constexpr int y_size = 12;
+    constexpr int z_size = 12;
 
     // Generate and initialize particles
     constexpr int num_particles = x_size * y_size * z_size;
@@ -205,8 +206,8 @@ int main()
     for (int i = 0; i < num_particles; ++i)
     {
         particles[i].i = i;
-        particles[i].m = 1.0 / static_cast<Scalar>(num_particles);
-        particles[i].x = Vec3::Random() + Vec3(0.0, 1.0, 0.0);
+        particles[i].m = 1000.0 / static_cast<Scalar>(num_particles);
+        particles[i].x = 0.5 * Vec3::Random() + Vec3(0.0, 1.0, 0.0);
         particles[i].v = Vec3::Zero();
     }
 
