@@ -5,6 +5,16 @@
 #include <iostream>
 #include <vector>
 
+void step(std::vector<Particle>& particles)
+{
+    const int num_particles = particles.size();
+
+    for (int i = 0; i < num_particles; ++i)
+    {
+        particles[i].x = Vec3::Random() + Vec3(0.0, 0.5, 0.0);
+    }
+}
+
 int main()
 {
     std::vector<Particle> particles;
@@ -22,20 +32,19 @@ int main()
     {
         particles[i].i = i;
         particles[i].m = 1.0 / static_cast<Scalar>(num_particles);
-        particles[i].x = Vec3::Random();
+        particles[i].x = Vec3::Random() + Vec3(0.0, 0.5, 0.0);
         particles[i].v = Vec3::Zero();
     }
 
+    // Instantiate an alembic manager and submit the initial status
     ParticlesAlembicManager alembic_manager("./test.abc", dt, "fluid", &particles);
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
     for (int t = 0; t < 120; ++t)
     {
-        for (int i = 0; i < num_particles; ++i)
-        {
-            particles[i].x = Vec3::Random();
-        }
+        // Step the simulation time
+        step(particles);
 
         // Write the current status
         alembic_manager.submitCurrentStatus();
