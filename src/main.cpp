@@ -258,8 +258,14 @@ int main()
     // Simulate particles
     for (int t = 0; t < 60; ++t)
     {
+        constexpr int num_substeps = 2;
+        constexpr Scalar sub_dt = dt / static_cast<Scalar>(num_substeps);
+
         // Step the simulation time
-        step(dt, particles);
+        for (int k = 0; k < num_substeps; ++ k)
+        {
+            step(sub_dt, particles);
+        }
 
         // Write the current status
         alembic_manager.submitCurrentStatus();
