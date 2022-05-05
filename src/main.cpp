@@ -21,12 +21,6 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
     {
         for (int j = 0; j < num_particles; ++j)
         {
-            // Do not include the target particle itself as its neighborhoods
-            if (i == j)
-            {
-                continue;
-            }
-
             const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
 
             if (squared_dist < radius_squared)
@@ -64,7 +58,6 @@ Scalar calcDensity(const int                            target_index,
 
         density += p.m * calcKernel(p_target.p - p.p, radius);
     }
-    density += p_target.m * calcKernel(Vec3::Zero(), radius);
 
     return density;
 }
@@ -159,11 +152,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             const int num_neighbors = neighbors_list[i].size();
 
-            // If there is no neighborhoods, just ignore the pressure
-            if (num_neighbors == 0)
-            {
-                continue;
-            }
+            assert(num_neighbors > 0);
 
             // Calculate the sum of pressure effect (Eq.12)
             MatX buffer(3, num_neighbors);
