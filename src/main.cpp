@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <timer.hpp>
 
 constexpr auto calcKernel     = calcPoly6Kernel;
 constexpr auto calcGradKernel = calcGradSpikyKernel;
@@ -261,10 +262,12 @@ int main()
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
+    constexpr int    num_substeps = 2;
+    constexpr Scalar sub_dt       = dt / static_cast<Scalar>(num_substeps);
     for (int t = 0; t < num_frames; ++t)
     {
-        constexpr int    num_substeps = 2;
-        constexpr Scalar sub_dt       = dt / static_cast<Scalar>(num_substeps);
+        // Instantiate timer
+        const auto timer = timer::Timer("Frame: " + std::to_string(t));
 
         // Step the simulation time
         for (int k = 0; k < num_substeps; ++k)
