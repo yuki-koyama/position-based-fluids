@@ -107,7 +107,7 @@ void printAverageDensity(const std::vector<Particle>&         particles,
                          const Scalar                         radius)
 {
     VecX buffer(particles.size());
-    for (int i = 0; i < particles.size(); ++ i)
+    for (int i = 0; i < particles.size(); ++i)
     {
         buffer[i] = calcDensity(i, particles, neighbor_list, radius);
     }
@@ -116,10 +116,10 @@ void printAverageDensity(const std::vector<Particle>&         particles,
 
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int    num_iters    = 4;
-    constexpr Scalar radius       = 0.2;
+    constexpr int    num_iters    = 5;
+    constexpr Scalar radius       = 0.15;
     constexpr Scalar rest_density = 1000.0;
-    constexpr Scalar epsilon      = 5e+01;
+    constexpr Scalar epsilon      = 1e-02;
     constexpr Scalar damping      = 0.999;
 
     const int num_particles = particles.size();
@@ -199,7 +199,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             // Detect and handle environmental collisions (in a very naive way)
             p.p = p.p.cwiseMax(Vec3(-1.0, 0.0, -1.0));
-            p.p = p.p.cwiseMin(Vec3(+1.0, 4.0, +1.0));
+            p.p = p.p.cwiseMin(Vec3(+1.0, 8.0, +1.0));
         }
     }
 
@@ -210,7 +210,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     }
 }
 
-void test()
+void test_kernel()
 {
     constexpr auto   calcFunc     = calcPoly6Kernel;
     constexpr auto   calcGradFunc = calcGradPoly6Kernel;
@@ -240,20 +240,22 @@ int main()
     std::vector<Particle> particles;
 
     constexpr Scalar dt         = 1.0 / 60.0;
-    constexpr int    num_frames = 60;
+    constexpr int    num_frames = 120;
 
-    constexpr int x_size = 20;
-    constexpr int y_size = 20;
-    constexpr int z_size = 20;
+    constexpr int x_size        = 30;
+    constexpr int y_size        = 30;
+    constexpr int z_size        = 30;
+    constexpr int num_particles = x_size * y_size * z_size;
+
+    std::cout << "#particles: " << num_particles << std::endl;
 
     // Generate and initialize particles
-    constexpr int num_particles = x_size * y_size * z_size;
     particles.resize(num_particles);
     for (int i = 0; i < num_particles; ++i)
     {
         particles[i].i = i;
-        particles[i].m = 4000.0 / static_cast<Scalar>(num_particles);
-        particles[i].x = Vec3(0.5, 2.0, 0.5).cwiseProduct(Vec3::Random()) + Vec3(0.0, 2.0, 0.0);
+        particles[i].m = 3000.0 / static_cast<Scalar>(num_particles);
+        particles[i].x = Vec3(0.5, 1.5, 0.5).cwiseProduct(Vec3::Random()) + Vec3(0.0, 2.0, 0.0);
         particles[i].v = Vec3::Zero();
     }
 
@@ -277,12 +279,6 @@ int main()
 
         // Write the current status
         alembic_manager.submitCurrentStatus();
-    }
-
-    // Print particle status
-    for (auto& particle : particles)
-    {
-        std::cout << particle.x.transpose() << std::endl;
     }
 
     return 0;
