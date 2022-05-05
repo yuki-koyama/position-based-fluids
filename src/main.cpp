@@ -119,6 +119,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     constexpr Scalar radius       = 0.2;
     constexpr Scalar rest_density = 1000.0;
     constexpr Scalar epsilon      = 5e+01;
+    constexpr Scalar damping      = 0.999;
 
     const int num_particles = particles.size();
 
@@ -203,7 +204,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
     for (int i = 0; i < num_particles; ++i)
     {
-        particles[i].v = (particles[i].p - particles[i].x) / dt;
+        particles[i].v = damping * (particles[i].p - particles[i].x) / dt;
         particles[i].x = particles[i].p;
     }
 }
