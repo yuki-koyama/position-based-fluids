@@ -8,7 +8,7 @@
 #include <vector>
 
 constexpr auto calcKernel     = calcPoly6Kernel;
-constexpr auto calcGradKernel = calcGradPoly6Kernel;
+constexpr auto calcGradKernel = calcGradSpikyKernel;
 
 std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
 {
