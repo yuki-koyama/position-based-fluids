@@ -28,8 +28,11 @@ set(USE_TESTS                        OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/alembic)
 target_include_directories(Alembic PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/alembic/lib>)
 
+set(TIMER_BUILD_TEST OFF CACHE INTERNAL "" FORCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/timer)
+
 file(GLOB headers ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp)
 file(GLOB sources ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 add_executable(main ${headers} ${sources})
-target_link_libraries(main PUBLIC Eigen3::Eigen Alembic)
+target_link_libraries(main PUBLIC Eigen3::Eigen Alembic timer)
