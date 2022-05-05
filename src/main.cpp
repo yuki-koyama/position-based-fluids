@@ -30,17 +30,6 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
         }
     }
 
-    constexpr bool print_stats = true;
-    if constexpr (print_stats)
-    {
-        VecX nums(num_particles);
-        for (int i = 0; i < num_particles; ++i)
-        {
-            nums[i] = neighbors_list[i].size();
-        }
-        std::cout << "Average(#neighbors): " << nums.mean() << std::endl;
-    }
-
     return neighbors_list;
 }
 
@@ -102,6 +91,28 @@ Vec3 calcGradConstraint(const int                            target_index,
     }
 }
 
+void printAverageNumNeighbors(const std::vector<std::vector<int>>& neighbors_list)
+{
+    VecX nums(neighbors_list.size());
+    for (int i = 0; i < neighbors_list.size(); ++i)
+    {
+        nums[i] = neighbors_list[i].size();
+    }
+    std::cout << "Average(#neighbors): " << nums.mean() << std::endl;
+}
+
+void printAverageDensity(const std::vector<Particle>&         particles,
+                         const std::vector<std::vector<int>>& neighbor_list,
+                         const Scalar                         radius)
+{
+    VecX buffer(particles.size());
+    for (int i = 0; i < particles.size(); ++ i)
+    {
+        buffer[i] = calcDensity(i, particles, neighbor_list, radius);
+    }
+    std::cout << "Average(density): " << buffer.mean() << std::endl;
+}
+
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
     constexpr int    num_iters    = 4;
@@ -118,6 +129,9 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     }
 
     const auto neighbors_list = findNeighborParticles(radius, particles);
+
+    printAverageNumNeighbors(neighbors_list);
+    printAverageDensity(particles, neighbors_list, radius);
 
     for (int k = 0; k < num_iters; ++k)
     {
