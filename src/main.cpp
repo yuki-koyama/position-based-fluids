@@ -120,7 +120,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     constexpr int    num_iters    = 2;
     constexpr Scalar radius       = 0.10;
     constexpr Scalar rest_density = 1000.0;
-    constexpr Scalar epsilon      = 1e-02;
+    constexpr Scalar epsilon_cfm  = 1e+05;
     constexpr Scalar damping      = 0.999;
 
     const int num_particles = particles.size();
@@ -156,7 +156,8 @@ void step(const Scalar dt, std::vector<Particle>& particles)
                 denominator += (1.0 / particles[neighbor_index].m) * grad.squaredNorm();
             }
             // Note: Add an epsilon value for relaxation (see Eq.11)
-            denominator += epsilon;
+            // TODO: Confirm this equation
+            denominator += epsilon_cfm;
 
             lambda[i] = -numerator / denominator;
         }
