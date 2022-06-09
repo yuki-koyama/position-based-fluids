@@ -117,8 +117,8 @@ void printAverageDensity(const std::vector<Particle>&         particles,
 
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int    num_iters    = 5;
-    constexpr Scalar radius       = 0.15;
+    constexpr int    num_iters    = 2;
+    constexpr Scalar radius       = 0.10;
     constexpr Scalar rest_density = 1000.0;
     constexpr Scalar epsilon      = 1e-02;
     constexpr Scalar damping      = 0.999;
@@ -265,12 +265,12 @@ int main()
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
-    constexpr int    num_substeps = 2;
+    constexpr int    num_substeps = 5;
     constexpr Scalar sub_dt       = dt / static_cast<Scalar>(num_substeps);
     for (int t = 0; t < num_frames; ++t)
     {
         // Instantiate timer
-        const auto timer = timer::Timer("Frame: " + std::to_string(t));
+        const auto timer = timer::Timer("Frame #" + std::to_string(t));
 
         // Step the simulation time
         for (int k = 0; k < num_substeps; ++k)
