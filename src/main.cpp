@@ -305,7 +305,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             const Vec3 sum = buffer.rowwise().sum();
 
             // Calculate delta p of this particle
-            delta_p.col(i) = (1.0 / rest_density) * sum;
+            delta_p.col(i) = (1.0 / p.m) * (1.0 / rest_density) * sum;
         };
         parallelutil::parallel_for(num_particles, calc_delta_p);
 
