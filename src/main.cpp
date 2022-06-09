@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <timer.hpp>
+#include <parallel-util.hpp>
 
 constexpr auto calcKernel     = calcPoly6Kernel;
 constexpr auto calcGradKernel = calcGradSpikyKernel;
