@@ -248,7 +248,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     {
         // Calculate lambda
         VecX lambda(num_particles);
-        for (int i = 0; i < num_particles; ++i)
+        auto calculate_lambda = [&](const int i)
         {
             auto& p = particles[i];
 
@@ -268,11 +268,12 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             denominator += epsilon_cfm;
 
             lambda[i] = -numerator / denominator;
-        }
+        };
+        parallelutil::parallel_for(num_particles, calculate_lambda);
 
         // Calculate delta p (note: Jacobi style)
         MatX delta_p(3, num_particles);
-        for (int i = 0; i < num_particles; ++i)
+        auto calc_delta_p = [&](const int i)
         {
             auto& p = particles[i];
 
@@ -305,13 +306,12 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             // Calculate delta p of this particle
             delta_p.col(i) = (1.0 / rest_density) * sum;
-        }
+        };
+        parallelutil::parallel_for(num_particles, calc_delta_p);
 
         // Apply delta p (note: Jacobi style)
-        for (int i = 0; i < num_particles; ++i)
-        {
-            particles[i].p += delta_p.col(i);
-        }
+        auto apply_delta_p = [&](const int i) { particles[i].p += delta_p.col(i); };
+        parallelutil::parallel_for(num_particles, apply_delta_p);
 
         for (int i = 0; i < num_particles; ++i)
         {
