@@ -280,14 +280,24 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             assert(num_neighbors > 0);
 
+            // Calculate the artificial tensile pressure correction constant
+            constexpr Scalar corr_n = 4.0;
+            constexpr Scalar corr_h = 0.30;
+            const Scalar     corr_k = p.m * 1e-04;
+            const Scalar     corr_w = calcKernel(corr_h * radius * Vec3::UnitX(), radius);
+
             // Calculate the sum of pressure effect (Eq.12)
             MatX buffer(3, num_neighbors);
             for (int j = 0; j < num_neighbors; ++j)
             {
                 const int neighbor_index = neighbors_list[i][j];
 
-                // TODO: Confirm this equation
-                const Scalar coeff = particles[neighbor_index].m * lambda[i] + p.m * lambda[neighbor_index];
+                // Calculate the artificial tensile pressure correction
+                const Scalar kernel_val = calcKernel(p.p - particles[neighbor_index].p, radius);
+                const Scalar ratio      = kernel_val / corr_w;
+                const Scalar corr_coeff = -corr_k * std::pow(ratio, corr_n);
+
+                const Scalar coeff = particles[neighbor_index].m * (lambda[i] + lambda[neighbor_index] + corr_coeff);
 
                 buffer.col(j) = coeff * calcGradKernel(p.p - particles[neighbor_index].p, radius);
             }
