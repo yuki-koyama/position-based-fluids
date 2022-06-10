@@ -5,10 +5,10 @@
 #include <Eigen/Core>
 #include <cstdint>
 #include <iostream>
-#include <vector>
-#include <timer.hpp>
 #include <map>
 #include <parallel-util.hpp>
+#include <timer.hpp>
+#include <vector>
 
 constexpr auto calcKernel     = calcPoly6Kernel;
 constexpr auto calcGradKernel = calcGradSpikyKernel;
@@ -360,10 +360,10 @@ int main()
     std::vector<Particle> particles;
 
     constexpr Scalar dt         = 1.0 / 60.0;
-    constexpr int    num_frames = 120;
+    constexpr int    num_frames = 240;
 
-    constexpr int x_size        = 30;
-    constexpr int y_size        = 30;
+    constexpr int x_size        = 60;
+    constexpr int y_size        = 60;
     constexpr int z_size        = 30;
     constexpr int num_particles = x_size * y_size * z_size;
 
@@ -375,7 +375,7 @@ int main()
     {
         particles[i].i = i;
         particles[i].m = 3000.0 / static_cast<Scalar>(num_particles);
-        particles[i].x = Vec3(0.5, 1.5, 0.5).cwiseProduct(Vec3::Random()) + Vec3(0.0, 2.0, 0.0);
+        particles[i].x = Vec3(0.5, 1.5, 0.5).cwiseProduct(Vec3::Random()) + Vec3(-0.5, 2.5, 0.0);
         particles[i].v = Vec3::Zero();
     }
 
