@@ -395,6 +395,15 @@ int main()
         for (int k = 0; k < num_substeps; ++k)
         {
             step(sub_dt, particles);
+
+            // Note: A dirty solution for managing a bad initial state
+            if (t < 5)
+            {
+                for (auto& p : particles)
+                {
+                    p.v = Vec3::Zero();
+                }
+            }
         }
 
         // Write the current status
