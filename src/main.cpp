@@ -225,11 +225,12 @@ void printAverageDensity(const std::vector<Particle>&         particles,
 
 void step(const Scalar dt, std::vector<Particle>& particles)
 {
-    constexpr int    num_iters    = 2;
-    constexpr Scalar radius       = 0.10;
-    constexpr Scalar rest_density = 1000.0;
-    constexpr Scalar epsilon_cfm  = 1e+05;
-    constexpr Scalar damping      = 0.999;
+    constexpr int    num_iters       = 2;
+    constexpr Scalar radius          = 0.10;
+    constexpr Scalar rest_density    = 1000.0;
+    constexpr Scalar epsilon_cfm     = 1e+05;
+    constexpr Scalar damping         = 0.999;
+    constexpr Scalar viscosity_coeff = 0.010;
 
     const int num_particles = particles.size();
 
@@ -326,6 +327,39 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     {
         particles[i].v = damping * (particles[i].p - particles[i].x) / dt;
         particles[i].x = particles[i].p;
+    }
+
+    // Apply the XSPH viscosity effect
+    VecX densities(num_particles);
+
+    const auto calc_density = [&](const int i) { densities[i] = calcDensity(i, particles, neighbors_list, radius); };
+    parallelutil::parallel_for(num_particles, calc_density);
+
+    MatX delta_v(3, num_particles);
+
+    const auto calc_viscosity = [&](const int i)
+    {
+        const auto& p             = particles[i];
+        const int   num_neighbors = neighbors_list[i].size();
+
+        MatX buffer(3, num_neighbors);
+        for (int j = 0; j < num_neighbors; ++j)
+        {
+            const int    neighbor_index = neighbors_list[i][j];
+            const Scalar kernel_val     = calcKernel(p.x - particles[neighbor_index].x, radius);
+            const auto   rel_velocity   = particles[neighbor_index].v - p.v;
+
+            buffer.col(j) = (p.m / densities[neighbor_index]) * kernel_val * rel_velocity;
+        }
+        const auto sum = buffer.rowwise().sum();
+
+        delta_v.col(i) = viscosity_coeff * sum;
+    };
+    parallelutil::parallel_for(num_particles, calc_viscosity);
+
+    for (int i = 0; i < num_particles; ++i)
+    {
+        particles[i].v += delta_v.col(i);
     }
 }
 
