@@ -248,10 +248,10 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     {
         // Calculate lambda
         VecX lambda(num_particles);
-        auto calculate_lambda = [&](const int i)
-        {
-            auto& p = particles[i];
 
+        const auto calc_lambda = [&](const int i)
+        {
+            const auto&  p         = particles[i];
             const Scalar numerator = calcConstraint(i, particles, neighbors_list, rest_density, radius);
 
             Scalar denominator = 0.0;
@@ -269,17 +269,15 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             lambda[i] = -numerator / denominator;
         };
-        parallelutil::parallel_for(num_particles, calculate_lambda);
+        parallelutil::parallel_for(num_particles, calc_lambda);
 
         // Calculate delta p (note: Jacobi style)
         MatX delta_p(3, num_particles);
-        auto calc_delta_p = [&](const int i)
+
+        const auto calc_delta_p = [&](const int i)
         {
-            auto& p = particles[i];
-
-            const int num_neighbors = neighbors_list[i].size();
-
-            assert(num_neighbors > 0);
+            const auto& p             = particles[i];
+            const int   num_neighbors = neighbors_list[i].size();
 
             // Calculate the artificial tensile pressure correction constant
             constexpr Scalar corr_n = 4.0;
@@ -310,7 +308,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         parallelutil::parallel_for(num_particles, calc_delta_p);
 
         // Apply delta p (note: Jacobi style)
-        auto apply_delta_p = [&](const int i) { particles[i].p += delta_p.col(i); };
+        const auto apply_delta_p = [&](const int i) { particles[i].p += delta_p.col(i); };
         parallelutil::parallel_for(num_particles, apply_delta_p);
 
         for (int i = 0; i < num_particles; ++i)
@@ -323,6 +321,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         }
     }
 
+    // Update positions and velocities
     for (int i = 0; i < num_particles; ++i)
     {
         particles[i].v = damping * (particles[i].p - particles[i].x) / dt;
