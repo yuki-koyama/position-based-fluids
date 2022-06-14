@@ -212,13 +212,13 @@ void printAverageNumNeighbors(const std::vector<std::vector<int>>& neighbors_lis
 }
 
 void printAverageDensity(const std::vector<Particle>&         particles,
-                         const std::vector<std::vector<int>>& neighbor_list,
+                         const std::vector<std::vector<int>>& neighbors_list,
                          const Scalar                         radius)
 {
     VecX buffer(particles.size());
     for (int i = 0; i < particles.size(); ++i)
     {
-        buffer[i] = calcDensity(i, particles, neighbor_list, radius);
+        buffer[i] = calcDensity(i, particles, neighbors_list, radius);
     }
     std::cout << "Average(density): " << buffer.mean() << std::endl;
 }
