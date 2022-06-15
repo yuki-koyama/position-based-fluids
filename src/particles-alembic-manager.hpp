@@ -4,8 +4,7 @@
 #include "alembic-manager-base.hpp"
 #include "particle.hpp"
 
-class ParticlesAlembicManager : public AlembicManagerBase
-{
+class ParticlesAlembicManager : public AlembicManagerBase {
 public:
     ParticlesAlembicManager(const std::string&           output_file_path,
                             const double                 delta_time,
@@ -19,8 +18,7 @@ public:
 private:
     const float* getAlembicPositionArray() override
     {
-        for (std::size_t index = 0; index < getNumVerts(); ++index)
-        {
+        for (std::size_t index = 0; index < getNumVerts(); ++index) {
             m_position_buffer.col(index) = (*m_particles_ptr)[index].x.cast<float>();
         }
         return m_position_buffer.data();
@@ -37,8 +35,7 @@ private:
         const std::vector<std::int32_t> counts(num_counts, 1);
 
         std::vector<uint64_t> index_buffer(num_counts);
-        for (std::size_t elem_index = 0; elem_index < num_counts; ++elem_index)
-        {
+        for (std::size_t elem_index = 0; elem_index < num_counts; ++elem_index) {
             index_buffer[elem_index] = elem_index;
         }
 

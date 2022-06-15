@@ -6,8 +6,7 @@
 #include <cstdint>
 #include <string>
 
-class AlembicManagerBase
-{
+class AlembicManagerBase {
 public:
     AlembicManagerBase(const std::string& output_file_path, const double delta_time, const std::string& object_name)
         : m_archive(Alembic::AbcCoreOgawa::WriteArchive(), output_file_path.c_str())
@@ -27,8 +26,7 @@ public:
         using namespace Alembic::Abc;
         using namespace Alembic::AbcGeom;
 
-        if (m_is_first)
-        {
+        if (m_is_first) {
             submitCurrentStatusFirstTime();
 
             m_is_first = false;

@@ -3,8 +3,7 @@
 
 #include "types.hpp"
 
-struct Particle
-{
+struct Particle {
     int    i;
     Scalar m;
     Vec3   x;

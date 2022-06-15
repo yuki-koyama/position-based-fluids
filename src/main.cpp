@@ -47,16 +47,12 @@ std::unordered_map<int, std::vector<int>> constructGridCells(const Scalar radius
 {
     std::unordered_map<int, std::vector<int>> grid_cells;
 
-    for (int i = 0; i < positions.cols(); ++i)
-    {
+    for (int i = 0; i < positions.cols(); ++i) {
         const int cell_index = convertIndex(calcCellIndex(radius, positions, i));
 
-        if (grid_cells.find(cell_index) == grid_cells.end())
-        {
+        if (grid_cells.find(cell_index) == grid_cells.end()) {
             grid_cells[cell_index] = std::vector<int>{i};
-        }
-        else
-        {
+        } else {
             grid_cells[cell_index].push_back(i);
         }
     }
@@ -71,14 +67,11 @@ std::vector<std::vector<int>> findNeighborParticlesNaive(const Scalar radius, co
 
     std::vector<std::vector<int>> neighbors_list(num_particles);
 
-    for (int i = 0; i < num_particles; ++i)
-    {
-        for (int j = 0; j < num_particles; ++j)
-        {
+    for (int i = 0; i < num_particles; ++i) {
+        for (int j = 0; j < num_particles; ++j) {
             const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
 
-            if (squared_dist < radius_squared)
-            {
+            if (squared_dist < radius_squared) {
                 neighbors_list[i].push_back(j);
             }
         }
@@ -93,8 +86,7 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
     const Scalar radius_squared = radius * radius;
 
     MatX positions(3, num_particles);
-    for (int i = 0; i < num_particles; ++i)
-    {
+    for (int i = 0; i < num_particles; ++i) {
         positions.col(i) = particles[i].p;
     }
 
@@ -102,18 +94,14 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
 
     std::vector<std::vector<int>> neighbors_list(num_particles);
 
-    for (int i = 0; i < num_particles; ++i)
-    {
+    for (int i = 0; i < num_particles; ++i) {
         // Determine the cell that the target particle belongs to
         const auto target_cell_index = calcCellIndex(radius, positions, i);
 
         // Visit the 26 neighbor cells and the cell itself (27 in total)
-        for (int x : {-1, 0, 1})
-        {
-            for (int y : {-1, 0, 1})
-            {
-                for (int z : {-1, 0, 1})
-                {
+        for (int x : {-1, 0, 1}) {
+            for (int y : {-1, 0, 1}) {
+                for (int z : {-1, 0, 1}) {
                     const int i_x = std::get<0>(target_cell_index) + x;
                     const int i_y = std::get<1>(target_cell_index) + y;
                     const int i_z = std::get<2>(target_cell_index) + z;
@@ -125,12 +113,10 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
 #if 1
                     neighbors_list[i].insert(neighbors_list[i].end(), list.begin(), list.end());
 #else
-                    for (const int& index : list)
-                    {
+                    for (const int& index : list) {
                         const Scalar squared_dist = (particles[i].p - particles[index].p).squaredNorm();
 
-                        if (squared_dist < 1.2 * radius_squared)
-                        {
+                        if (squared_dist < 1.2 * radius_squared) {
                             neighbors_list[i].push_back(index);
                         }
                     }
@@ -151,8 +137,7 @@ Scalar calcDensity(const int                            target_index,
     const auto& p_target = particles[target_index];
 
     Scalar density = 0.0;
-    for (int neighbor_index : neighbor_list[target_index])
-    {
+    for (int neighbor_index : neighbor_list[target_index]) {
         const auto& p = particles[neighbor_index];
 
         density += p.m * calcKernel(p_target.p - p.p, radius);
@@ -181,20 +166,16 @@ Vec3 calcGradConstraint(const int                            target_index,
 {
     const auto& p_target = particles[target_index];
 
-    if (target_index == var_index)
-    {
+    if (target_index == var_index) {
         Vec3 sum = Vec3::Zero();
-        for (int neighbor_index : neighbor_list[target_index])
-        {
+        for (int neighbor_index : neighbor_list[target_index]) {
             const auto& p = particles[neighbor_index];
 
             sum += p.m * calcGradKernel(p_target.p - p.p, radius);
         }
 
         return sum / rest_density;
-    }
-    else
-    {
+    } else {
         const auto& p = particles[var_index];
 
         return -p.m * calcGradKernel(p_target.p - p.p, radius) / rest_density;
@@ -204,8 +185,7 @@ Vec3 calcGradConstraint(const int                            target_index,
 void printAverageNumNeighbors(const std::vector<std::vector<int>>& neighbors_list)
 {
     VecX nums(neighbors_list.size());
-    for (int i = 0; i < neighbors_list.size(); ++i)
-    {
+    for (int i = 0; i < neighbors_list.size(); ++i) {
         nums[i] = neighbors_list[i].size();
     }
     std::cout << "Average(#neighbors): " << nums.mean() << std::endl;
@@ -216,8 +196,7 @@ void printAverageDensity(const std::vector<Particle>&         particles,
                          const Scalar                         radius)
 {
     VecX buffer(particles.size());
-    for (int i = 0; i < particles.size(); ++i)
-    {
+    for (int i = 0; i < particles.size(); ++i) {
         buffer[i] = calcDensity(i, particles, neighbors_list, radius);
     }
     std::cout << "Average(density): " << buffer.mean() << std::endl;
@@ -234,8 +213,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
     const int num_particles = particles.size();
 
-    for (int i = 0; i < num_particles; ++i)
-    {
+    for (int i = 0; i < num_particles; ++i) {
         particles[i].v = particles[i].v + dt * Vec3(0.0, -9.8, 0.0);
         particles[i].p = particles[i].x + dt * particles[i].v;
     }
@@ -245,19 +223,16 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     printAverageNumNeighbors(neighbors_list);
     printAverageDensity(particles, neighbors_list, radius);
 
-    for (int k = 0; k < num_iters; ++k)
-    {
+    for (int k = 0; k < num_iters; ++k) {
         // Calculate lambda
         VecX lambda(num_particles);
 
-        const auto calc_lambda = [&](const int i)
-        {
+        const auto calc_lambda = [&](const int i) {
             const auto&  p         = particles[i];
             const Scalar numerator = calcConstraint(i, particles, neighbors_list, rest_density, radius);
 
             Scalar denominator = 0.0;
-            for (int neighbor_index : neighbors_list[i])
-            {
+            for (int neighbor_index : neighbors_list[i]) {
                 const Vec3 grad =
                     calcGradConstraint(i, neighbor_index, particles, neighbors_list, rest_density, radius);
 
@@ -275,8 +250,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         // Calculate delta p (note: Jacobi style)
         MatX delta_p(3, num_particles);
 
-        const auto calc_delta_p = [&](const int i)
-        {
+        const auto calc_delta_p = [&](const int i) {
             const auto& p             = particles[i];
             const int   num_neighbors = neighbors_list[i].size();
 
@@ -288,8 +262,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             // Calculate the sum of pressure effect (Eq.12)
             MatX buffer(3, num_neighbors);
-            for (int j = 0; j < num_neighbors; ++j)
-            {
+            for (int j = 0; j < num_neighbors; ++j) {
                 const int neighbor_index = neighbors_list[i][j];
 
                 // Calculate the artificial tensile pressure correction
@@ -308,12 +281,13 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         };
         parallelutil::parallel_for(num_particles, calc_delta_p);
 
-        // Apply delta p (note: Jacobi style)
-        const auto apply_delta_p = [&](const int i) { particles[i].p += delta_p.col(i); };
+        // Apply delta p in the Jacobi style
+        const auto apply_delta_p = [&](const int i) {
+            particles[i].p += delta_p.col(i);
+        };
         parallelutil::parallel_for(num_particles, apply_delta_p);
 
-        for (int i = 0; i < num_particles; ++i)
-        {
+        for (int i = 0; i < num_particles; ++i) {
             auto& p = particles[i];
 
             // Detect and handle environmental collisions (in a very naive way)
@@ -323,8 +297,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     }
 
     // Update positions and velocities
-    for (int i = 0; i < num_particles; ++i)
-    {
+    for (int i = 0; i < num_particles; ++i) {
         particles[i].v = damping * (particles[i].p - particles[i].x) / dt;
         particles[i].x = particles[i].p;
     }
@@ -343,8 +316,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         const int   num_neighbors = neighbors_list[i].size();
 
         MatX buffer(3, num_neighbors);
-        for (int j = 0; j < num_neighbors; ++j)
-        {
+        for (int j = 0; j < num_neighbors; ++j) {
             const int    neighbor_index = neighbors_list[i][j];
             const Scalar kernel_val     = calcKernel(p.x - particles[neighbor_index].x, radius);
             const auto   rel_velocity   = particles[neighbor_index].v - p.v;
@@ -404,8 +376,7 @@ int main()
 
     // Generate and initialize particles
     particles.resize(num_particles);
-    for (int i = 0; i < num_particles; ++i)
-    {
+    for (int i = 0; i < num_particles; ++i) {
         particles[i].i = i;
         particles[i].m = 3000.0 / static_cast<Scalar>(num_particles);
         particles[i].x = Vec3(0.5, 1.5, 0.5).cwiseProduct(Vec3::Random()) + Vec3(-0.5, 2.5, 0.0);
@@ -419,21 +390,17 @@ int main()
     // Simulate particles
     constexpr int    num_substeps = 5;
     constexpr Scalar sub_dt       = dt / static_cast<Scalar>(num_substeps);
-    for (int t = 0; t < num_frames; ++t)
-    {
+    for (int t = 0; t < num_frames; ++t) {
         // Instantiate timer
         const auto timer = timer::Timer("Frame #" + std::to_string(t));
 
         // Step the simulation time
-        for (int k = 0; k < num_substeps; ++k)
-        {
+        for (int k = 0; k < num_substeps; ++k) {
             step(sub_dt, particles);
 
             // Note: A dirty solution for managing a bad initial state
-            if (t < 5)
-            {
-                for (auto& p : particles)
-                {
+            if (t < 5) {
+                for (auto& p : particles) {
                     p.v = Vec3::Zero();
                 }
             }
