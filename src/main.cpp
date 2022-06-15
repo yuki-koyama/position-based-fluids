@@ -60,26 +60,6 @@ std::unordered_map<int, std::vector<int>> constructGridCells(const Scalar radius
     return grid_cells;
 }
 
-std::vector<std::vector<int>> findNeighborParticlesNaive(const Scalar radius, const std::vector<Particle>& particles)
-{
-    const int    num_particles  = particles.size();
-    const Scalar radius_squared = radius * radius;
-
-    std::vector<std::vector<int>> neighbors_list(num_particles);
-
-    for (int i = 0; i < num_particles; ++i) {
-        for (int j = 0; j < num_particles; ++j) {
-            const Scalar squared_dist = (particles[i].p - particles[j].p).squaredNorm();
-
-            if (squared_dist < radius_squared) {
-                neighbors_list[i].push_back(j);
-            }
-        }
-    }
-
-    return neighbors_list;
-}
-
 std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
 {
     const int    num_particles  = particles.size();
