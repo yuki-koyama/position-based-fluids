@@ -110,13 +110,13 @@ std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const s
 
                     const auto& list = grid_cells[cell_index];
 
-#if 1
+#if 0
                     neighbors_list[i].insert(neighbors_list[i].end(), list.begin(), list.end());
 #else
                     for (const int& index : list) {
                         const Scalar squared_dist = (particles[i].p - particles[index].p).squaredNorm();
 
-                        if (squared_dist < 1.2 * radius_squared) {
+                        if (squared_dist < radius_squared) {
                             neighbors_list[i].push_back(index);
                         }
                     }
@@ -209,7 +209,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     constexpr Scalar rest_density    = 1000.0;
     constexpr Scalar epsilon_cfm     = 1e+05;
     constexpr Scalar damping         = 0.999;
-    constexpr Scalar viscosity_coeff = 0.010;
+    constexpr Scalar viscosity_coeff = 0.050;
     constexpr bool   verbose         = false;
 
     const int num_particles = particles.size();
