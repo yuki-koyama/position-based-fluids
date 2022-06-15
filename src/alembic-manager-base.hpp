@@ -36,7 +36,10 @@ public:
             return;
         }
 
-        const OPointsSchema::Sample sample(V3fArraySample((const V3f*) getAlembicPositionArray(), getNumVerts()));
+        const float* position_array = getAlembicPositionArray();
+
+        const V3fArraySample        position_array_sample(reinterpret_cast<const V3f*>(position_array), getNumVerts());
+        const OPointsSchema::Sample sample(position_array_sample);
 
         m_points.getSchema().set(sample);
     }

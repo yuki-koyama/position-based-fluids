@@ -42,7 +42,9 @@ private:
             index_buffer[elem_index] = elem_index;
         }
 
-        const V3fArraySample        position_array_sample((const V3f*) getAlembicPositionArray(), getNumVerts());
+        const float* position_array = getAlembicPositionArray();
+
+        const V3fArraySample        position_array_sample(reinterpret_cast<const V3f*>(position_array), getNumVerts());
         const UInt64ArraySample     index_array_sample(index_buffer.data(), getNumVerts());
         const OPointsSchema::Sample sample(position_array_sample, index_array_sample);
 
