@@ -304,14 +304,13 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
     // Apply the XSPH viscosity effect
     VecX densities(num_particles);
-
-    const auto calc_density = [&](const int i) { densities[i] = calcDensity(i, particles, neighbors_list, radius); };
-    parallelutil::parallel_for(num_particles, calc_density);
-
     MatX delta_v(3, num_particles);
 
-    const auto calc_viscosity = [&](const int i)
-    {
+    parallelutil::parallel_for(num_particles, [&](const int i) {
+        densities[i] = calcDensity(i, particles, neighbors_list, radius);
+    });
+
+    parallelutil::parallel_for(num_particles, [&](const int i) {
         const auto& p             = particles[i];
         const int   num_neighbors = neighbors_list[i].size();
 
@@ -326,13 +325,11 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         const auto sum = buffer.rowwise().sum();
 
         delta_v.col(i) = viscosity_coeff * sum;
-    };
-    parallelutil::parallel_for(num_particles, calc_viscosity);
+    });
 
-    for (int i = 0; i < num_particles; ++i)
-    {
+    parallelutil::parallel_for(num_particles, [&](const int i) {
         particles[i].v += delta_v.col(i);
-    }
+    });
 }
 
 int main()
