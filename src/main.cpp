@@ -210,6 +210,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     constexpr Scalar epsilon_cfm     = 1e+05;
     constexpr Scalar damping         = 0.999;
     constexpr Scalar viscosity_coeff = 0.010;
+    constexpr bool   verbose         = false;
 
     const int num_particles = particles.size();
 
@@ -218,10 +219,13 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         particles[i].p = particles[i].x + dt * particles[i].v;
     }
 
+    // Find neighborhoods of every particle
     const auto neighbors_list = findNeighborParticles(radius, particles);
 
-    printAverageNumNeighbors(neighbors_list);
-    printAverageDensity(particles, neighbors_list, radius);
+    if constexpr (verbose) {
+        printAverageNumNeighbors(neighbors_list);
+        printAverageDensity(particles, neighbors_list, radius);
+    }
 
     for (int k = 0; k < num_iters; ++k) {
         // Calculate lambda
@@ -257,7 +261,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             // Calculate the artificial tensile pressure correction constant
             constexpr Scalar corr_n = 4.0;
             constexpr Scalar corr_h = 0.30;
-            const Scalar     corr_k = p.m * 1e-04;
+            const Scalar     corr_k = p.m * 1.0e-04; // Note: This equation has no ground and may not work well
             const Scalar     corr_w = calcKernel(corr_h * radius * Vec3::UnitX(), radius);
 
             // Calculate the sum of pressure effect (Eq.12)
@@ -336,13 +340,9 @@ int main()
 {
     std::vector<Particle> particles;
 
-    constexpr Scalar dt         = 1.0 / 60.0;
-    constexpr int    num_frames = 240;
-
-    constexpr int x_size        = 60;
-    constexpr int y_size        = 60;
-    constexpr int z_size        = 30;
-    constexpr int num_particles = x_size * y_size * z_size;
+    constexpr Scalar dt            = 1.0 / 60.0;
+    constexpr int    num_frames    = 240;
+    constexpr int    num_particles = 108000;
 
     std::cout << "#particles: " << num_particles << std::endl;
 
