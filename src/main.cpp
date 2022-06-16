@@ -337,6 +337,26 @@ int main()
 
     // Instantiate an alembic manager and submit the initial status
     ParticlesAlembicManager alembic_manager("./test.abc", dt, "Fluid", &particles);
+
+    // Relax initial particle positions (a dirty solution for resolving bad initial states)
+    constexpr int num_relax_steps = 20;
+    for (int k = 0; k < num_relax_steps; ++k) {
+        const auto   timer   = timer::Timer("Init " + std::to_string(k) + " / " + std::to_string(num_relax_steps));
+        const Scalar damping = std::min(1.0, (static_cast<Scalar>(k) * 2.0 / static_cast<Scalar>(num_relax_steps)));
+
+        // Step the simulation time forward using a very small time step
+        step(1e-04 * dt, particles);
+
+        // Damp velocities for stability
+        for (auto& p : particles) {
+            p.v = damping * p.v;
+        }
+    }
+    for (auto& p : particles) {
+        p.v = Vec3::Zero();
+    }
+
+    // Write the current status
     alembic_manager.submitCurrentStatus();
 
     // Simulate particles
@@ -349,13 +369,6 @@ int main()
         // Step the simulation time
         for (int k = 0; k < num_substeps; ++k) {
             step(sub_dt, particles);
-
-            // Note: A dirty solution for managing a bad initial state
-            if (t < 5) {
-                for (auto& p : particles) {
-                    p.v = Vec3::Zero();
-                }
-            }
         }
 
         // Write the current status
