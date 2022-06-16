@@ -1,11 +1,9 @@
 #include "kernels.hpp"
+#include "neighbor-search-engine.hpp"
 #include "particle.hpp"
 #include "particles-alembic-manager.hpp"
 #include "types.hpp"
-#include <Eigen/Core>
-#include <cstdint>
 #include <iostream>
-#include <map>
 #include <parallel-util.hpp>
 #include <timer.hpp>
 #include <vector>
@@ -13,111 +11,17 @@
 constexpr auto calcKernel     = calcPoly6Kernel;
 constexpr auto calcGradKernel = calcGradSpikyKernel;
 
-constexpr int n_x = 100;
-constexpr int n_y = 100;
-constexpr int n_z = 100;
-const Vec3    grid_center(0.0, 1.0, 0.0);
-const Vec3    grid_numbers(n_x, n_y, n_z);
+using NeighborSearchEngine = UniformGridNeighborSearchEngine;
 
-std::tuple<int, int, int> calcCellIndex(const Scalar radius, const MatX& positions, const int target_particle_index)
-{
-    const Vec3 pos            = positions.col(target_particle_index);
-    const Vec3 grid_coord_pos = (pos - grid_center) * (1.0 / radius) + 0.5 * grid_numbers;
-
-    const int i_x = std::floor(grid_coord_pos[0]);
-    const int i_y = std::floor(grid_coord_pos[1]);
-    const int i_z = std::floor(grid_coord_pos[2]);
-
-    assert(i_x >= 0);
-    assert(i_y >= 0);
-    assert(i_z >= 0);
-    assert(i_x < n_x);
-    assert(i_y < n_y);
-    assert(i_z < n_z);
-
-    return std::tuple<int, int, int>{i_x, i_y, i_z};
-}
-
-int convertIndex(const std::tuple<int, int, int>& index)
-{
-    return std::get<0>(index) + n_x * std::get<1>(index) + n_x * n_y * std::get<2>(index);
-}
-
-std::unordered_map<int, std::vector<int>> constructGridCells(const Scalar radius, const MatX& positions)
-{
-    std::unordered_map<int, std::vector<int>> grid_cells;
-
-    for (int i = 0; i < positions.cols(); ++i) {
-        const int cell_index = convertIndex(calcCellIndex(radius, positions, i));
-
-        if (grid_cells.find(cell_index) == grid_cells.end()) {
-            grid_cells[cell_index] = std::vector<int>{i};
-        } else {
-            grid_cells[cell_index].push_back(i);
-        }
-    }
-
-    return grid_cells;
-}
-
-std::vector<std::vector<int>> findNeighborParticles(const Scalar radius, const std::vector<Particle>& particles)
-{
-    const int    num_particles  = particles.size();
-    const Scalar radius_squared = radius * radius;
-
-    MatX positions(3, num_particles);
-    for (int i = 0; i < num_particles; ++i) {
-        positions.col(i) = particles[i].p;
-    }
-
-    auto grid_cells = constructGridCells(radius, positions);
-
-    std::vector<std::vector<int>> neighbors_list(num_particles);
-
-    for (int i = 0; i < num_particles; ++i) {
-        // Determine the cell that the target particle belongs to
-        const auto target_cell_index = calcCellIndex(radius, positions, i);
-
-        // Visit the 26 neighbor cells and the cell itself (27 in total)
-        for (int x : {-1, 0, 1}) {
-            for (int y : {-1, 0, 1}) {
-                for (int z : {-1, 0, 1}) {
-                    const int i_x = std::get<0>(target_cell_index) + x;
-                    const int i_y = std::get<1>(target_cell_index) + y;
-                    const int i_z = std::get<2>(target_cell_index) + z;
-
-                    const int cell_index = convertIndex({i_x, i_y, i_z});
-
-                    const auto& list = grid_cells[cell_index];
-
-#if 0
-                    neighbors_list[i].insert(neighbors_list[i].end(), list.begin(), list.end());
-#else
-                    for (const int& index : list) {
-                        const Scalar squared_dist = (particles[i].p - particles[index].p).squaredNorm();
-
-                        if (squared_dist < radius_squared) {
-                            neighbors_list[i].push_back(index);
-                        }
-                    }
-#endif
-                }
-            }
-        }
-    }
-
-    return neighbors_list;
-}
-
-Scalar calcDensity(const int                            target_index,
-                   const std::vector<Particle>&         particles,
-                   const std::vector<std::vector<int>>& neighbor_list,
-                   const Scalar                         radius)
+Scalar calcDensity(const int                    target_index,
+                   const std::vector<Particle>& particles,
+                   const NeighborSearchEngine&  neighbor_search_engine,
+                   const Scalar                 radius)
 {
     const auto& p_target = particles[target_index];
 
     Scalar density = 0.0;
-    for (int neighbor_index : neighbor_list[target_index]) {
+    for (int neighbor_index : neighbor_search_engine.retrieveNeighbors(target_index)) {
         const auto& p = particles[neighbor_index];
 
         density += p.m * calcKernel(p_target.p - p.p, radius);
@@ -126,29 +30,29 @@ Scalar calcDensity(const int                            target_index,
     return density;
 }
 
-Scalar calcConstraint(const int                            target_index,
-                      const std::vector<Particle>&         particles,
-                      const std::vector<std::vector<int>>& neighbor_list,
-                      const Scalar                         rest_density,
-                      const Scalar                         radius)
+Scalar calcConstraint(const int                    target_index,
+                      const std::vector<Particle>& particles,
+                      const NeighborSearchEngine&  neighbor_search_engine,
+                      const Scalar                 rest_density,
+                      const Scalar                 radius)
 {
-    const Scalar density = calcDensity(target_index, particles, neighbor_list, radius);
+    const Scalar density = calcDensity(target_index, particles, neighbor_search_engine, radius);
 
     return (density / rest_density) - 1.0;
 }
 
-Vec3 calcGradConstraint(const int                            target_index,
-                        const int                            var_index,
-                        const std::vector<Particle>&         particles,
-                        const std::vector<std::vector<int>>& neighbor_list,
-                        const Scalar                         rest_density,
-                        const Scalar                         radius)
+Vec3 calcGradConstraint(const int                    target_index,
+                        const int                    var_index,
+                        const std::vector<Particle>& particles,
+                        const NeighborSearchEngine&  neighbor_search_engine,
+                        const Scalar                 rest_density,
+                        const Scalar                 radius)
 {
     const auto& p_target = particles[target_index];
 
     if (target_index == var_index) {
         Vec3 sum = Vec3::Zero();
-        for (int neighbor_index : neighbor_list[target_index]) {
+        for (int neighbor_index : neighbor_search_engine.retrieveNeighbors(target_index)) {
             const auto& p = particles[neighbor_index];
 
             sum += p.m * calcGradKernel(p_target.p - p.p, radius);
@@ -162,22 +66,24 @@ Vec3 calcGradConstraint(const int                            target_index,
     }
 }
 
-void printAverageNumNeighbors(const std::vector<std::vector<int>>& neighbors_list)
+void printAverageNumNeighbors(const NeighborSearchEngine& neighbor_search_engine)
 {
-    VecX nums(neighbors_list.size());
-    for (int i = 0; i < neighbors_list.size(); ++i) {
-        nums[i] = neighbors_list[i].size();
+    const int num_particles = neighbor_search_engine.getNumParticles();
+
+    VecX nums(num_particles);
+    for (int i = 0; i < num_particles; ++i) {
+        nums[i] = neighbor_search_engine.retrieveNeighbors(i).size();
     }
     std::cout << "Average(#neighbors): " << nums.mean() << std::endl;
 }
 
-void printAverageDensity(const std::vector<Particle>&         particles,
-                         const std::vector<std::vector<int>>& neighbors_list,
-                         const Scalar                         radius)
+void printAverageDensity(const std::vector<Particle>& particles,
+                         const NeighborSearchEngine&  neighbor_search_engine,
+                         const Scalar                 radius)
 {
     VecX buffer(particles.size());
     for (int i = 0; i < particles.size(); ++i) {
-        buffer[i] = calcDensity(i, particles, neighbors_list, radius);
+        buffer[i] = calcDensity(i, particles, neighbor_search_engine, radius);
     }
     std::cout << "Average(density): " << buffer.mean() << std::endl;
 }
@@ -199,12 +105,15 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         particles[i].p = particles[i].x + dt * particles[i].v;
     }
 
+    // Prepare a neighborhood search engine
+    NeighborSearchEngine neighbor_search_engine(radius, particles);
+
     // Find neighborhoods of every particle
-    const auto neighbors_list = findNeighborParticles(radius, particles);
+    neighbor_search_engine.searchNeighbors();
 
     if constexpr (verbose) {
-        printAverageNumNeighbors(neighbors_list);
-        printAverageDensity(particles, neighbors_list, radius);
+        printAverageNumNeighbors(neighbor_search_engine);
+        printAverageDensity(particles, neighbor_search_engine, radius);
     }
 
     for (int k = 0; k < num_iters; ++k) {
@@ -213,12 +122,12 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
         const auto calc_lambda = [&](const int i) {
             const auto&  p         = particles[i];
-            const Scalar numerator = calcConstraint(i, particles, neighbors_list, rest_density, radius);
+            const Scalar numerator = calcConstraint(i, particles, neighbor_search_engine, rest_density, radius);
 
             Scalar denominator = 0.0;
-            for (int neighbor_index : neighbors_list[i]) {
+            for (int neighbor_index : neighbor_search_engine.retrieveNeighbors(i)) {
                 const Vec3 grad =
-                    calcGradConstraint(i, neighbor_index, particles, neighbors_list, rest_density, radius);
+                    calcGradConstraint(i, neighbor_index, particles, neighbor_search_engine, rest_density, radius);
 
                 // Note: In Eq.12, the inverse mass is dropped for simplicity
                 denominator += (1.0 / particles[neighbor_index].m) * grad.squaredNorm();
@@ -236,7 +145,8 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
         const auto calc_delta_p = [&](const int i) {
             const auto& p             = particles[i];
-            const int   num_neighbors = neighbors_list[i].size();
+            const auto& neighbors     = neighbor_search_engine.retrieveNeighbors(i);
+            const int   num_neighbors = neighbors.size();
 
             // Calculate the artificial tensile pressure correction constant
             constexpr Scalar corr_n = 4.0;
@@ -247,7 +157,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             // Calculate the sum of pressure effect (Eq.12)
             MatX buffer(3, num_neighbors);
             for (int j = 0; j < num_neighbors; ++j) {
-                const int neighbor_index = neighbors_list[i][j];
+                const int neighbor_index = neighbors[j];
 
                 // Calculate the artificial tensile pressure correction
                 const Scalar kernel_val = calcKernel(p.p - particles[neighbor_index].p, radius);
@@ -291,16 +201,17 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     MatX delta_v(3, num_particles);
 
     parallelutil::parallel_for(num_particles, [&](const int i) {
-        densities[i] = calcDensity(i, particles, neighbors_list, radius);
+        densities[i] = calcDensity(i, particles, neighbor_search_engine, radius);
     });
 
     parallelutil::parallel_for(num_particles, [&](const int i) {
         const auto& p             = particles[i];
-        const int   num_neighbors = neighbors_list[i].size();
+        const auto& neighbors     = neighbor_search_engine.retrieveNeighbors(i);
+        const int   num_neighbors = neighbors.size();
 
         MatX buffer(3, num_neighbors);
         for (int j = 0; j < num_neighbors; ++j) {
-            const int    neighbor_index = neighbors_list[i][j];
+            const int    neighbor_index = neighbors[j];
             const Scalar kernel_val     = calcKernel(p.x - particles[neighbor_index].x, radius);
             const auto   rel_velocity   = particles[neighbor_index].v - p.v;
 
