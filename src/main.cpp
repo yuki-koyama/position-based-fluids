@@ -100,6 +100,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
     const int num_particles = particles.size();
 
+    // Predict positions using the semi-implicit Euler integration
     for (int i = 0; i < num_particles; ++i) {
         particles[i].v = particles[i].v + dt * Vec3(0.0, -9.8, 0.0);
         particles[i].p = particles[i].x + dt * particles[i].v;
@@ -133,14 +134,14 @@ void step(const Scalar dt, std::vector<Particle>& particles)
                 denominator += (1.0 / particles[neighbor_index].m) * grad.squaredNorm();
             }
             // Note: Add an epsilon value for relaxation (see Eq.11)
-            // TODO: Confirm this equation
+            // TODO: Check this equation
             denominator += epsilon_cfm;
 
             lambda[i] = -numerator / denominator;
         };
         parallelutil::parallel_for(num_particles, calc_lambda);
 
-        // Calculate delta p (note: Jacobi style)
+        // Calculate delta p in the Jacobi style
         MatX delta_p(3, num_particles);
 
         const auto calc_delta_p = [&](const int i) {
@@ -184,7 +185,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         for (int i = 0; i < num_particles; ++i) {
             auto& p = particles[i];
 
-            // Detect and handle environmental collisions (in a very naive way)
+            // Detect and resolve environmental collisions (in a very naive way)
             p.p = p.p.cwiseMax(Vec3(-1.0, 0.0, -1.0));
             p.p = p.p.cwiseMin(Vec3(+1.0, 8.0, +1.0));
         }
@@ -196,7 +197,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         particles[i].x = particles[i].p;
     }
 
-    // Apply the XSPH viscosity effect
+    // Apply the XSPH viscosity effect [Schechter+, SIGGRAPH 2012]
     VecX densities(num_particles);
     MatX delta_v(3, num_particles);
 
@@ -225,6 +226,8 @@ void step(const Scalar dt, std::vector<Particle>& particles)
     parallelutil::parallel_for(num_particles, [&](const int i) {
         particles[i].v += delta_v.col(i);
     });
+
+    // TODO: Apply vorticity confinement
 }
 
 int main()
