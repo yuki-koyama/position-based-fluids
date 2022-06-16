@@ -121,7 +121,7 @@ void step(const Scalar dt, std::vector<Particle>& particles)
         // Calculate lambda
         VecX lambda(num_particles);
 
-        const auto calc_lambda = [&](const int i) {
+        parallelutil::parallel_for(num_particles, [&](const int i) {
             const auto&  p         = particles[i];
             const Scalar numerator = calcConstraint(i, particles, neighbor_search_engine, rest_density, radius);
 
@@ -138,13 +138,12 @@ void step(const Scalar dt, std::vector<Particle>& particles)
             denominator += epsilon_cfm;
 
             lambda[i] = -numerator / denominator;
-        };
-        parallelutil::parallel_for(num_particles, calc_lambda);
+        });
 
         // Calculate delta p in the Jacobi style
         MatX delta_p(3, num_particles);
 
-        const auto calc_delta_p = [&](const int i) {
+        parallelutil::parallel_for(num_particles, [&](const int i) {
             const auto& p             = particles[i];
             const auto& neighbors     = neighbor_search_engine.retrieveNeighbors(i);
             const int   num_neighbors = neighbors.size();
@@ -173,29 +172,28 @@ void step(const Scalar dt, std::vector<Particle>& particles)
 
             // Calculate delta p of this particle
             delta_p.col(i) = (1.0 / p.m) * (1.0 / rest_density) * sum;
-        };
-        parallelutil::parallel_for(num_particles, calc_delta_p);
+        });
 
         // Apply delta p in the Jacobi style
-        const auto apply_delta_p = [&](const int i) {
+        parallelutil::parallel_for(num_particles, [&](const int i) {
             particles[i].p += delta_p.col(i);
-        };
-        parallelutil::parallel_for(num_particles, apply_delta_p);
+        });
 
-        for (int i = 0; i < num_particles; ++i) {
+        // Solve collision constraints
+        parallelutil::parallel_for(num_particles, [&](const int i) {
             auto& p = particles[i];
 
             // Detect and resolve environmental collisions (in a very naive way)
             p.p = p.p.cwiseMax(Vec3(-1.0, 0.0, -1.0));
             p.p = p.p.cwiseMin(Vec3(+1.0, 8.0, +1.0));
-        }
+        });
     }
 
     // Update positions and velocities
-    for (int i = 0; i < num_particles; ++i) {
+    parallelutil::parallel_for(num_particles, [&](const int i) {
         particles[i].v = damping * (particles[i].p - particles[i].x) / dt;
         particles[i].x = particles[i].p;
-    }
+    });
 
     // Apply the XSPH viscosity effect [Schechter+, SIGGRAPH 2012]
     VecX densities(num_particles);
