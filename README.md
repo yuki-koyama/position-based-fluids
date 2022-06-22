@@ -2,6 +2,9 @@
 
 An implementation of Position Based Fluids [Macklin+, SIGGRAPH 2013] in C++.
 
+![](./docs/sample-1.gif)
+![](./docs/sample-2.gif)
+
 ## Dependencies
 
 - [alembic](https://github.com/alembic/alembic) (included as a git submodule)
