@@ -16,7 +16,7 @@ An implementation of Position Based Fluids [Macklin+, SIGGRAPH 2013] in C++.
 
 macOS:
 ```sh
-brew install cmake eigen
+brew install cmake eigen imath
 ```
 
 Other environments (e.g., Windows) are not tested.
