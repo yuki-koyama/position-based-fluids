@@ -1,5 +1,7 @@
 # position-based-fluids
 
+[![macOS](https://github.com/yuki-koyama/position-based-fluids/actions/workflows/macos.yml/badge.svg)](https://github.com/yuki-koyama/position-based-fluids/actions/workflows/macos.yml)
+
 An implementation of Position Based Fluids [Macklin+, SIGGRAPH 2013] in C++.
 
 ![](./docs/sample-1.gif)
