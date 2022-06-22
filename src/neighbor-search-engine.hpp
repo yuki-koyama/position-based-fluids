@@ -33,9 +33,9 @@ protected:
 };
 
 /// \brief Neighborhood search engine based on a simple uniform grid construction
-class UniformGridNeighborSearchEngine : public NeighborSearchEngineBase {
+class HashGridNeighborSearchEngine : public NeighborSearchEngineBase {
 public:
-    UniformGridNeighborSearchEngine(const Scalar radius, const std::vector<Particle>& particles);
+    HashGridNeighborSearchEngine(const Scalar radius, const std::vector<Particle>& particles);
 
     void searchNeighbors() override;
 

@@ -11,7 +11,7 @@
 constexpr auto calcKernel     = calcPoly6Kernel;
 constexpr auto calcGradKernel = calcGradSpikyKernel;
 
-using NeighborSearchEngine = UniformGridNeighborSearchEngine;
+using NeighborSearchEngine = HashGridNeighborSearchEngine;
 
 Scalar calcDensity(const int                    target_index,
                    const std::vector<Particle>& particles,

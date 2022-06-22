@@ -1,12 +1,11 @@
 #include "neighbor-search-engine.hpp"
 
-UniformGridNeighborSearchEngine::UniformGridNeighborSearchEngine(const Scalar                 radius,
-                                                                 const std::vector<Particle>& particles)
+HashGridNeighborSearchEngine::HashGridNeighborSearchEngine(const Scalar radius, const std::vector<Particle>& particles)
     : NeighborSearchEngineBase(radius, particles)
 {
 }
 
-void UniformGridNeighborSearchEngine::searchNeighbors()
+void HashGridNeighborSearchEngine::searchNeighbors()
 {
     const int    num_particles  = m_particles.size();
     const Scalar radius_squared = m_radius * m_radius;
@@ -50,10 +49,8 @@ void UniformGridNeighborSearchEngine::searchNeighbors()
     }
 }
 
-UniformGridNeighborSearchEngine::GridIndex
-UniformGridNeighborSearchEngine::calcGridIndex(const Scalar radius,
-                                               const MatX&  positions,
-                                               const int    target_particle_index)
+HashGridNeighborSearchEngine::GridIndex
+HashGridNeighborSearchEngine::calcGridIndex(const Scalar radius, const MatX& positions, const int target_particle_index)
 {
     const auto pos            = positions.col(target_particle_index);
     const Vec3 grid_coord_pos = (pos - k_grid_center) * (1.0 / radius) + 0.5 * Vec3(k_n_x, k_n_y, k_n_z);
@@ -72,13 +69,13 @@ UniformGridNeighborSearchEngine::calcGridIndex(const Scalar radius,
     return GridIndex{i_x, i_y, i_z};
 }
 
-int UniformGridNeighborSearchEngine::convertGridIndexToArrayIndex(const GridIndex& index)
+int HashGridNeighborSearchEngine::convertGridIndexToArrayIndex(const GridIndex& index)
 {
     return std::get<0>(index) + k_n_x * std::get<1>(index) + k_n_x * k_n_y * std::get<2>(index);
 }
 
-std::unordered_map<int, std::vector<int>> UniformGridNeighborSearchEngine::constructGridCells(const Scalar radius,
-                                                                                              const MatX&  positions)
+std::unordered_map<int, std::vector<int>> HashGridNeighborSearchEngine::constructGridCells(const Scalar radius,
+                                                                                           const MatX&  positions)
 {
     std::unordered_map<int, std::vector<int>> grid_cells;
 
