@@ -62,9 +62,9 @@ HashGridNeighborSearchEngine::calcGridIndex(const Scalar radius, const MatX& pos
     assert(i_x >= 0);
     assert(i_y >= 0);
     assert(i_z >= 0);
-    assert(i_x < n_x);
-    assert(i_y < n_y);
-    assert(i_z < n_z);
+    assert(i_x < k_n_x);
+    assert(i_y < k_n_y);
+    assert(i_z < k_n_z);
 
     return GridIndex{i_x, i_y, i_z};
 }
