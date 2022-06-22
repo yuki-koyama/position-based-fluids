@@ -19,7 +19,7 @@ macOS:
 brew install cmake eigen imath
 ```
 
-Other environments (e.g., Windows) are not tested.
+Other environments (e.g., Ubuntu, Windows) are not tested.
 
 ## Implementation Details
 
